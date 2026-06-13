@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RootWorks Foundation — Rooted in Purpose</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  /* ─── TOKENS ─────────────────────────────────────── */
+  :root {
+    --espresso:   #1C0A00;
+    --dark-brown: #2E1503;
+    --mid-brown:  #5C2D0A;
+    --amber:      #C68B3A;
+    --amber-lt:   #DBA95A;
+    --rust:       #8B3A1C;
+    --parchment:  #F2E8D9;
+    --cream:      #FAF5EE;
+    --sage:       #6B7C5C;
+    --text-light: #F2E8D9cc;
+    --r: 0.6rem;
+  }
+
+  /* ─── RESET ──────────────────────────────────────── */
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--espresso);
+    overflow-x: hidden;
+  }
+  img { display:block; max-width:100%; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── EDITABLE HIGHLIGHT ─────────────────────────── */
+  [contenteditable]:focus {
+    outline: 2px dashed var(--amber);
+    outline-offset: 4px;
+    border-radius: 4px;
+    background: rgba(198,139,58,.08);
+  }
+  [contenteditable]:hover:not(:focus) {
+    outline: 1px dashed var(--amber-lt);
+    outline-offset: 3px;
+    border-radius: 4px;
+    cursor: text;
+  }
+  .edit-badge {
+    position: fixed;
+    bottom: 1.5rem; right: 1.5rem;
+    background: var(--amber);
+    color: var(--espresso);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .5rem 1rem;
+    border-radius: 2rem;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+    cursor: pointer;
+    z-index: 9999;
+    transition: background .2s, transform .15s;
+    display: flex; align-items: center; gap:.45rem;
+  }
+  .edit-badge:hover { background: var(--amber-lt); transform:translateY(-2px); }
+  .edit-badge svg { width:14px; height:14px; }
+  .edit-mode-on .edit-badge { background: var(--rust); }
+  .toast {
+    position: fixed;
+    bottom: 5rem; right: 1.5rem;
+    background: var(--espresso);
+    color: var(--parchment);
+    font-size: .8rem;
+    padding: .6rem 1.1rem;
+    border-radius: .4rem;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .3s, transform .3s;
+    z-index: 9998;
+    pointer-events: none;
+  }
+  .toast.show { opacity:1; transform:translateY(0); }
+
+  /* ─── NAV ────────────────────────────────────────── */
+  nav {
+    position: fixed; top:0; left:0; width:100%;
+    padding: 1.2rem 4rem;
+    display: flex; align-items:center; justify-content:space-between;
+    z-index: 100;
+    transition: background .4s, box-shadow .4s;
+  }
+  nav.scrolled {
+    background: rgba(28,10,0,.92);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 0 rgba(198,139,58,.2);
+  }
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: .02em;
+  }
+  .nav-links { display:flex; gap:2.2rem; align-items:center; }
+  .nav-links a {
+    color: var(--parchment);
+    font-size: .85rem;
+    font-weight: 500;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    opacity: .85;
+    transition: opacity .2s, color .2s;
+  }
+  .nav-links a:hover { opacity:1; color:var(--amber); }
+  .nav-cta {
+    background: var(--amber);
+    color: var(--espresso) !important;
+    padding: .5rem 1.3rem;
+    border-radius: 2rem;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+    transition: background .2s !important;
+  }
+  .nav-cta:hover { background: var(--amber-lt) !important; }
+
+  /* ─── HERO ────────────────────────────────────────── */
+  #hero {
+    min-height: 100vh;
+    background:
+      linear-gradient(160deg, rgba(28,10,0,.82) 0%, rgba(92,45,10,.55) 60%, rgba(139,58,28,.3) 100%),
+      url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=1600&q=80') center/cover no-repeat;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 4rem 5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  #hero::after {
+    content: '';
+    position: absolute; bottom:0; left:0; width:100%; height:180px;
+    background: linear-gradient(to top, var(--cream), transparent);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    display: inline-block;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 1.4rem;
+  }
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3rem, 7vw, 6rem);
+    line-height: 1.08;
+    color: var(--parchment);
+    font-weight: 700;
+    max-width: 780px;
+    margin-bottom: 1.6rem;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--amber);
+  }
+  .hero-sub {
+    font-size: 1.1rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    max-width: 520px;
+    margin-bottom: 2.8rem;
+  }
+  .hero-btns { display:flex; gap:1rem; flex-wrap:wrap; }
+  .btn-primary {
+    background: var(--amber);
+    color: var(--espresso);
+    padding: .85rem 2rem;
+    border-radius: 3rem;
+    font-weight: 600;
+    font-size: .9rem;
+    letter-spacing: .04em;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    border: none; cursor: pointer;
+    display: inline-block;
+  }
+  .btn-primary:hover { background:var(--amber-lt); transform:translateY(-2px); box-shadow:0 8px 24px rgba(198,139,58,.35); }
+  .btn-outline {
+    border: 1.5px solid var(--parchment);
+    color: var(--parchment);
+    padding: .83rem 2rem;
+    border-radius: 3rem;
+    font-weight: 500;
+    font-size: .9rem;
+    letter-spacing: .04em;
+    transition: border-color .2s, color .2s;
+    cursor: pointer;
+    display: inline-block;
+  }
+  .btn-outline:hover { border-color: var(--amber); color: var(--amber); }
+
+  /* ─── STATS BAR ──────────────────────────────────── */
+  .stats-bar {
+    background: var(--dark-brown);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stat-item {
+    padding: 2.2rem 2.5rem;
+    border-right: 1px solid rgba(198,139,58,.15);
+    text-align: center;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--amber);
+    display: block;
+    line-height: 1;
+    margin-bottom: .3rem;
+  }
+  .stat-label {
+    font-size: .78rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text-light);
+  }
+
+  /* ─── SECTIONS ───────────────────────────────────── */
+  section { padding: 6rem 4rem; }
+  .section-eyebrow {
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 600;
+    margin-bottom: .9rem;
+    display: block;
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--espresso);
+    max-width: 600px;
+  }
+  .section-title em { font-style:italic; color:var(--rust); }
+  .section-body {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #4a2c0a;
+    max-width: 560px;
+    margin-top: 1.2rem;
+  }
+
+  /* ─── ABOUT ──────────────────────────────────────── */
+  #about {
+    background: var(--cream);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: center;
+  }
+  .about-img-wrap {
+    position: relative;
+  }
+  .about-img-wrap img {
+    width: 100%;
+    border-radius: 1.2rem;
+    aspect-ratio: 4/5;
+    object-fit: cover;
+    box-shadow: 0 24px 60px rgba(28,10,0,.25);
+  }
+  .about-img-badge {
+    position: absolute;
+    bottom: -1.5rem; right: -1.5rem;
+    background: var(--amber);
+    color: var(--espresso);
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 1.2rem 1.6rem;
+    border-radius: .8rem;
+    box-shadow: 0 8px 30px rgba(198,139,58,.4);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .about-img-badge span { font-size:.7rem; font-family:'Inter',sans-serif; font-weight:500; display:block; letter-spacing:.06em; }
+
+  /* ─── SERVICES ───────────────────────────────────── */
+  #services { background: var(--parchment); }
+  .services-header { margin-bottom: 3.5rem; }
+  .services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.8rem;
+  }
+  .service-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2.5rem 2rem;
+    border: 1px solid rgba(92,45,10,.1);
+    transition: transform .25s, box-shadow .25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .service-card::before {
+    content: '';
+    position: absolute;
+    top:0; left:0; width:100%; height:3px;
+    background: linear-gradient(90deg, var(--amber), var(--rust));
+    transform: scaleX(0);
+    transition: transform .3s;
+    transform-origin: left;
+  }
+  .service-card:hover { transform: translateY(-6px); box-shadow: 0 16px 48px rgba(28,10,0,.12); }
+  .service-card:hover::before { transform: scaleX(1); }
+  .service-icon {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--amber), var(--rust));
+    border-radius: .7rem;
+    display: flex; align-items:center; justify-content:center;
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+  }
+  .service-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--espresso);
+    margin-bottom: .7rem;
+  }
+  .service-desc {
+    font-size: .9rem;
+    line-height: 1.7;
+    color: #5c3a1a;
+  }
+
+  /* ─── MISSION ────────────────────────────────────── */
+  #mission {
+    background: var(--espresso);
+    text-align: center;
+    padding: 7rem 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  #mission::before {
+    content:'';
+    position:absolute; top:-80px; left:50%; transform:translateX(-50%);
+    width:600px; height:600px;
+    background: radial-gradient(circle, rgba(198,139,58,.15) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .mission-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+    font-style: italic;
+    color: var(--parchment);
+    max-width: 780px;
+    margin: 0 auto 2rem;
+    line-height: 1.45;
+    position: relative;
+  }
+  .mission-quote::before {
+    content: '\201C';
+    font-size: 8rem;
+    color: var(--amber);
+    opacity: .3;
+    position: absolute;
+    top: -2.5rem; left: -1rem;
+    font-style: normal;
+    line-height: 1;
+    font-family: 'Playfair Display', serif;
+  }
+  .mission-attr {
+    font-size: .85rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 500;
+  }
+
+  /* ─── TEAM ───────────────────────────────────────── */
+  #team { background: var(--cream); }
+  .team-header { margin-bottom: 3.5rem; }
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.6rem;
+  }
+  .team-card {
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(28,10,0,.08);
+    transition: transform .25s, box-shadow .25s;
+  }
+  .team-card:hover { transform:translateY(-5px); box-shadow:0 12px 40px rgba(28,10,0,.15); }
+  .team-photo-wrap {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: var(--parchment);
+    display: flex; align-items:center; justify-content:center;
+  }
+  .team-photo-wrap img {
+    width:100%; height:100%; object-fit:cover;
+    transition: transform .4s;
+  }
+  .team-card:hover .team-photo-wrap img { transform:scale(1.05); }
+  .team-info { padding: 1.4rem 1.2rem 1.6rem; }
+  .team-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--espresso);
+    margin-bottom: .25rem;
+  }
+  .team-role {
+    font-size: .78rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--rust);
+    font-weight: 500;
+  }
+
+  /* ─── GALLERY ────────────────────────────────────── */
+  #gallery { background: var(--dark-brown); padding: 5rem 4rem; }
+  .gallery-header { margin-bottom: 2.5rem; }
+  .gallery-header .section-title { color: var(--parchment); }
+  .gallery-header .section-eyebrow { color: var(--amber-lt); }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1rem;
+  }
+  .gallery-item {
+    overflow: hidden;
+    border-radius: .8rem;
+    cursor: pointer;
+  }
+  .gallery-item:first-child { grid-row: span 2; }
+  .gallery-item img {
+    width:100%; height:100%;
+    object-fit: cover;
+    transition: transform .5s;
+    min-height: 200px;
+  }
+  .gallery-item:hover img { transform: scale(1.05); }
+
+  /* ─── CONTACT ────────────────────────────────────── */
+  #contact {
+    background: var(--parchment);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem;
+    align-items: start;
+  }
+  .contact-detail {
+    display: flex; gap:1rem; align-items:flex-start;
+    margin-top: 2rem;
+  }
+  .contact-icon {
+    width:42px; height:42px;
+    background: var(--amber);
+    border-radius: .5rem;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    font-size:1rem;
+  }
+  .contact-label {
+    font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--rust); font-weight:600; margin-bottom:.2rem;
+  }
+  .contact-value { font-size:.95rem; color:var(--espresso); line-height:1.5; }
+  .contact-form { display:flex; flex-direction:column; gap:1.2rem; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .form-group { display:flex; flex-direction:column; gap:.4rem; }
+  .form-label { font-size:.78rem; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:#5c2d0a; }
+  .form-input, .form-textarea {
+    padding: .85rem 1.1rem;
+    border: 1.5px solid rgba(92,45,10,.2);
+    border-radius: .5rem;
+    font-family:'Inter',sans-serif;
+    font-size:.93rem;
+    background: white;
+    color: var(--espresso);
+    transition: border-color .2s, box-shadow .2s;
+    outline:none;
+  }
+  .form-input:focus, .form-textarea:focus {
+    border-color: var(--amber);
+    box-shadow: 0 0 0 3px rgba(198,139,58,.15);
+  }
+  .form-textarea { min-height:130px; resize:vertical; }
+  .form-submit {
+    background: var(--espresso);
+    color: var(--parchment);
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 3rem;
+    font-family:'Inter',sans-serif;
+    font-size:.9rem;
+    font-weight:600;
+    letter-spacing:.05em;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+    align-self: flex-start;
+  }
+  .form-submit:hover { background:var(--mid-brown); transform:translateY(-2px); }
+
+  /* ─── FOOTER ─────────────────────────────────────── */
+  footer {
+    background: var(--espresso);
+    color: var(--text-light);
+    padding: 4rem 4rem 2rem;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 4rem;
+    border-top: 1px solid rgba(198,139,58,.15);
+  }
+  .footer-brand { }
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--amber);
+    margin-bottom: 1rem;
+  }
+  .footer-tagline { font-size:.88rem; line-height:1.7; opacity:.7; max-width:280px; }
+  .footer-col-title {
+    font-size:.72rem; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--amber); font-weight:600; margin-bottom:1.2rem;
+  }
+  .footer-links { list-style:none; display:flex; flex-direction:column; gap:.7rem; }
+  .footer-links li a { font-size:.88rem; opacity:.7; transition:opacity .2s; }
+  .footer-links li a:hover { opacity:1; }
+  .footer-bottom {
+    background: var(--espresso);
+    border-top: 1px solid rgba(198,139,58,.1);
+    padding: 1.5rem 4rem;
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:.8rem;
+    color: rgba(242,232,217,.45);
+  }
+
+  /* ─── IMAGE PICKER MODAL ─────────────────────────── */
+  .img-modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(28,10,0,.8); z-index:2000;
+    align-items:center; justify-content:center;
+  }
+  .img-modal-overlay.open { display:flex; }
+  .img-modal {
+    background:var(--cream); border-radius:1rem;
+    padding:2rem; max-width:520px; width:90%;
+  }
+  .img-modal h3 { font-family:'Playfair Display',serif; margin-bottom:1rem; }
+  .img-modal input[type=url] {
+    width:100%; padding:.8rem 1rem; border:1.5px solid rgba(92,45,10,.2);
+    border-radius:.5rem; font-size:.9rem; margin-bottom:.8rem; outline:none;
+  }
+  .img-modal input[type=url]:focus { border-color:var(--amber); }
+  .img-modal-btns { display:flex; gap:.8rem; justify-content:flex-end; margin-top:1rem; }
+  .img-modal-btns button {
+    padding:.6rem 1.3rem; border-radius:2rem; border:none; cursor:pointer;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:.85rem;
+  }
+  .modal-cancel { background:var(--parchment); color:var(--espresso); }
+  .modal-apply { background:var(--amber); color:var(--espresso); }
+
+  /* ─── RESPONSIVE ─────────────────────────────────── */
+  @media(max-width:900px){
+    nav { padding:1rem 1.5rem; }
+    .nav-links { display:none; }
+    section, #about, #contact, footer { padding:4rem 1.5rem; grid-template-columns:1fr; }
+    .stats-bar { grid-template-columns:1fr 1fr; }
+    .services-grid { grid-template-columns:1fr; }
+    .team-grid { grid-template-columns:1fr 1fr; }
+    .gallery-grid { grid-template-columns:1fr 1fr; }
+    .gallery-item:first-child { grid-row:span 1; }
+    footer { grid-template-columns:1fr; gap:2rem; }
+    .form-row { grid-template-columns:1fr; }
+    #hero { padding:7rem 1.5rem 4rem; }
+  }
+
+  /* ─── SCROLL ANIMATIONS ──────────────────────────── */
+  .reveal { opacity:0; transform:translateY(30px); transition:opacity .7s ease, transform .7s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="main-nav">
+  <div class="nav-logo" contenteditable="false">RootWorks</div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#services">What We Do</a>
+    <a href="#mission">Mission</a>
+    <a href="#team">Team</a>
+    <a href="#gallery">Stories</a>
+    <a href="#contact" class="nav-cta">Get Involved</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <span class="hero-eyebrow" contenteditable="false">Est. 2018 · Making Impact</span>
+  <h1 class="hero-title" contenteditable="false">Rooted in <em>Purpose</em>,<br/>Growing in Hope</h1>
+  <p class="hero-sub" contenteditable="false">We build sustainable communities from the ground up — nurturing education, ecology, and economic opportunity across underserved regions of India.</p>
+  <div class="hero-btns">
+    <a href="#contact" class="btn-primary" contenteditable="false">Join Our Mission</a>
+    <a href="#about" class="btn-outline" contenteditable="false">Our Story</a>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar reveal">
+  <div class="stat-item">
+    <span class="stat-num" contenteditable="false">12K+</span>
+    <span class="stat-label" contenteditable="false">Lives Touched</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" contenteditable="false">340</span>
+    <span class="stat-label" contenteditable="false">Villages Reached</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" contenteditable="false">87</span>
+    <span class="stat-label" contenteditable="false">Active Programs</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" contenteditable="false">₹2.1Cr</span>
+    <span class="stat-label" contenteditable="false">Funds Mobilized</span>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="about-img-wrap reveal">
+    <img id="about-img" src="https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=800&q=80" alt="Community work" onclick="openImgModal('about-img')" style="cursor:pointer;" title="Click to change image"/>
+    <div class="about-img-badge" contenteditable="false">6 Years<br/><span>of Service</span></div>
+  </div>
+  <div class="about-content reveal">
+    <span class="section-eyebrow" contenteditable="false">Who We Are</span>
+    <h2 class="section-title" contenteditable="false">Grounded in <em>community</em>, guided by nature</h2>
+    <p class="section-body" contenteditable="false">RootWorks Foundation was born from a simple belief: lasting change grows from within communities, not from outside them. Since 2018, we have worked alongside farmers, educators, and youth leaders to cultivate resilience, knowledge, and dignity.</p>
+    <p class="section-body" style="margin-top:.9rem;" contenteditable="false">Our approach is rooted in deep listening — we spend months in communities before proposing any program, ensuring our work is always locally owned and ecologically sound.</p>
+    <a href="#services" class="btn-primary" style="margin-top:2rem; display:inline-block;" contenteditable="false">Explore Our Work</a>
+  </div>
+</section>
+
+<!-- SERVICES -->
+<section id="services">
+  <div class="services-header reveal">
+    <span class="section-eyebrow" contenteditable="false">What We Do</span>
+    <h2 class="section-title" contenteditable="false">Programs that <em>take root</em> and endure</h2>
+  </div>
+  <div class="services-grid">
+    <div class="service-card reveal">
+      <div class="service-icon">🌱</div>
+      <div class="service-title" contenteditable="false">Eco Restoration</div>
+      <p class="service-desc" contenteditable="false">Replanting native forests, restoring watersheds, and training communities in sustainable land stewardship — because healthy land is the foundation of everything.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">📚</div>
+      <div class="service-title" contenteditable="false">Rural Education</div>
+      <p class="service-desc" contenteditable="false">Building learning centres, providing teacher training, and creating bilingual curricula rooted in local culture and practical skill-building for rural children.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">🤝</div>
+      <div class="service-title" contenteditable="false">Women's Collectives</div>
+      <p class="service-desc" contenteditable="false">Supporting self-help groups, microenterprise incubation, and leadership development so women become drivers of economic transformation in their villages.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">🌾</div>
+      <div class="service-title" contenteditable="false">Organic Farming</div>
+      <p class="service-desc" contenteditable="false">Transitioning smallholder farmers to chemical-free methods, connecting them to fair-trade markets, and increasing household income by an average of 38%.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">💧</div>
+      <div class="service-title" contenteditable="false">Clean Water Access</div>
+      <p class="service-desc" contenteditable="false">Constructing rainwater harvesting systems and solar-powered bore wells, providing 4,200+ families with year-round access to safe drinking water.</p>
+    </div>
+    <div class="service-card reveal">
+      <div class="service-icon">🎨</div>
+      <div class="service-title" contenteditable="false">Youth Arts & Culture</div>
+      <p class="service-desc" contenteditable="false">Preserving indigenous art traditions through youth workshops, artist stipends, and annual cultural festivals that draw visitors and spotlight local heritage.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MISSION QUOTE -->
+<section id="mission">
+  <p class="mission-quote reveal" contenteditable="false">We do not help communities. We become part of them — sharing soil, stories, and the slow, honest work of growing something that lasts.</p>
+  <p class="mission-attr reveal" contenteditable="false">— Founders' Manifesto, RootWorks Foundation</p>
+</section>
+
+<!-- TEAM -->
+<section id="team">
+  <div class="team-header reveal">
+    <span class="section-eyebrow" contenteditable="false">Our People</span>
+    <h2 class="section-title" contenteditable="false">The hands that do the work</h2>
+  </div>
+  <div class="team-grid">
+    <div class="team-card reveal">
+      <div class="team-photo-wrap">
+        <img id="team-img-1" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80" alt="Team member" onclick="openImgModal('team-img-1')" style="cursor:pointer;" title="Click to change photo"/>
+      </div>
+      <div class="team-info">
+        <div class="team-name" contenteditable="false">Arjun Mehta</div>
+        <div class="team-role" contenteditable="false">Founder & Director</div>
+      </div>
+    </div>
+    <div class="team-card reveal">
+      <div class="team-photo-wrap">
+        <img id="team-img-2" src="https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=400&q=80" alt="Team member" onclick="openImgModal('team-img-2')" style="cursor:pointer;" title="Click to change photo"/>
+      </div>
+      <div class="team-info">
+        <div class="team-name" contenteditable="false">Priya Sharma</div>
+        <div class="team-role" contenteditable="false">Programs Head</div>
+      </div>
+    </div>
+    <div class="team-card reveal">
+      <div class="team-photo-wrap">
+        <img id="team-img-3" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80" alt="Team member" onclick="openImgModal('team-img-3')" style="cursor:pointer;" title="Click to change photo"/>
+      </div>
+      <div class="team-info">
+        <div class="team-name" contenteditable="false">Ravi Kumar</div>
+        <div class="team-role" contenteditable="false">Ecology Lead</div>
+      </div>
+    </div>
+    <div class="team-card reveal">
+      <div class="team-photo-wrap">
+        <img id="team-img-4" src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=400&q=80" alt="Team member" onclick="openImgModal('team-img-4')" style="cursor:pointer;" title="Click to change photo"/>
+      </div>
+      <div class="team-info">
+        <div class="team-name" contenteditable="false">Sunita Rao</div>
+        <div class="team-role" contenteditable="false">Community Liaison</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="gallery-header reveal">
+    <span class="section-eyebrow" contenteditable="false">Stories from the Field</span>
+    <h2 class="section-title" contenteditable="false">Moments that matter</h2>
+  </div>
+  <div class="gallery-grid reveal">
+    <div class="gallery-item">
+      <img id="gal-1" src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=800&q=80" alt="gallery" onclick="openImgModal('gal-1')" title="Click to change"/>
+    </div>
+    <div class="gallery-item">
+      <img id="gal-2" src="https://images.unsplash.com/photo-1530099486328-e021101a494a?w=600&q=80" alt="gallery" onclick="openImgModal('gal-2')" title="Click to change"/>
+    </div>
+    <div class="gallery-item">
+      <img id="gal-3" src="https://images.unsplash.com/photo-1509099836639-18ba1795216d?w=600&q=80" alt="gallery" onclick="openImgModal('gal-3')" title="Click to change"/>
+    </div>
+    <div class="gallery-item">
+      <img id="gal-4" src="https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=600&q=80" alt="gallery" onclick="openImgModal('gal-4')" title="Click to change"/>
+    </div>
+    <div class="gallery-item">
+      <img id="gal-5" src="https://images.unsplash.com/photo-1544027993-37dbfe43562a?w=600&q=80" alt="gallery" onclick="openImgModal('gal-5')" title="Click to change"/>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="contact-left reveal">
+    <span class="section-eyebrow" contenteditable="false">Get in Touch</span>
+    <h2 class="section-title" contenteditable="false">Let's grow <em>something</em> together</h2>
+    <p class="section-body" contenteditable="false">Whether you want to volunteer, donate, partner, or simply learn more about our work — we would love to hear from you.</p>
+    <div class="contact-detail">
+      <div class="contact-icon">📍</div>
+      <div>
+        <div class="contact-label">Address</div>
+        <div class="contact-value" contenteditable="false">42 Greenway Lane, Koramangala<br/>Bengaluru, Karnataka 560034</div>
+      </div>
+    </div>
+    <div class="contact-detail">
+      <div class="contact-icon">📧</div>
+      <div>
+        <div class="contact-label">Email</div>
+        <div class="contact-value" contenteditable="false">hello@rootworks.org</div>
+      </div>
+    </div>
+    <div class="contact-detail">
+      <div class="contact-icon">📞</div>
+      <div>
+        <div class="contact-label">Phone</div>
+        <div class="contact-value" contenteditable="false">+91 98765 43210</div>
+      </div>
+    </div>
+  </div>
+  <div class="contact-right reveal">
+    <div class="contact-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">First Name</label>
+          <input type="text" class="form-input" placeholder="Priya"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Name</label>
+          <input type="text" class="form-input" placeholder="Singh"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" placeholder="priya@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">I want to...</label>
+        <select class="form-input">
+          <option>Volunteer with a program</option>
+          <option>Make a donation</option>
+          <option>Partner with RootWorks</option>
+          <option>Learn about your work</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message</label>
+        <textarea class="form-textarea" placeholder="Tell us a little about yourself or your inquiry…"></textarea>
+      </div>
+      <button class="form-submit" onclick="submitForm()">Send Message →</button>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">
+    <div class="footer-logo" contenteditable="false">RootWorks</div>
+    <p class="footer-tagline" contenteditable="false">Building resilient communities through ecology, education, and empowerment — one root at a time.</p>
+  </div>
+  <div>
+    <div class="footer-col-title">Quick Links</div>
+    <ul class="footer-links">
+      <li><a href="#about">About Us</a></li>
+      <li><a href="#services">Programs</a></li>
+      <li><a href="#mission">Our Mission</a></li>
+      <li><a href="#team">Our Team</a></li>
+      <li><a href="#gallery">Stories</a></li>
+    </ul>
+  </div>
+  <div>
+    <div class="footer-col-title">Connect</div>
+    <ul class="footer-links">
+      <li><a href="#">Instagram</a></li>
+      <li><a href="#">LinkedIn</a></li>
+      <li><a href="#">Twitter</a></li>
+      <li><a href="#">YouTube</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <span contenteditable="false">© 2024 RootWorks Foundation. All rights reserved.</span>
+  <span contenteditable="false">Made with purpose 🌿</span>
+</div>
+
+<!-- EDIT MODE BADGE -->
+<div class="edit-badge" id="edit-badge" onclick="toggleEdit()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  <span id="edit-label">Edit Mode</span>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- IMAGE MODAL -->
+<div class="img-modal-overlay" id="img-modal-overlay">
+  <div class="img-modal">
+    <h3>Change Image</h3>
+    <p style="font-size:.85rem;color:#5c2d0a;margin-bottom:1rem;">Paste an image URL below (Unsplash, Imgur, etc.)</p>
+    <input type="url" id="img-url-input" placeholder="https://images.unsplash.com/photo-..."/>
+    <div id="img-preview" style="margin-top:.5rem;border-radius:.5rem;overflow:hidden;max-height:180px;display:none;"><img id="img-preview-img" style="width:100%;object-fit:cover;max-height:180px;"/></div>
+    <div class="img-modal-btns">
+      <button class="modal-cancel" onclick="closeImgModal()">Cancel</button>
+      <button class="modal-apply" onclick="applyImg()">Apply Image</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── EDIT MODE ─────────────────────────────
+let editMode = false;
+let currentImgTarget = null;
+
+function toggleEdit(){
+  editMode = !editMode;
+  document.querySelectorAll('[contenteditable]').forEach(el=>{
+    el.contentEditable = editMode ? 'true' : 'false';
+  });
+  document.body.classList.toggle('edit-mode-on', editMode);
+  document.getElementById('edit-label').textContent = editMode ? 'Done Editing' : 'Edit Mode';
+  showToast(editMode ? '✏️ Click any text to edit it' : '✅ Changes saved!');
+}
+
+// ─── TOAST ─────────────────────────────────
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+// ─── IMAGE MODAL ────────────────────────────
+function openImgModal(id){
+  if(!editMode){ showToast('Enable Edit Mode first'); return; }
+  currentImgTarget = id;
+  document.getElementById('img-modal-overlay').classList.add('open');
+  document.getElementById('img-url-input').value = '';
+  document.getElementById('img-preview').style.display = 'none';
+}
+function closeImgModal(){
+  document.getElementById('img-modal-overlay').classList.remove('open');
+  currentImgTarget = null;
+}
+document.getElementById('img-url-input').addEventListener('input', function(){
+  const v = this.value.trim();
+  if(v.startsWith('http')){
+    document.getElementById('img-preview-img').src = v;
+    document.getElementById('img-preview').style.display = 'block';
+  } else {
+    document.getElementById('img-preview').style.display = 'none';
+  }
+});
+function applyImg(){
+  const url = document.getElementById('img-url-input').value.trim();
+  if(!url){ showToast('Please enter a valid URL'); return; }
+  if(currentImgTarget){
+    document.getElementById(currentImgTarget).src = url;
+    showToast('✅ Image updated!');
+  }
+  closeImgModal();
+}
+
+// ─── NAV SCROLL ─────────────────────────────
+window.addEventListener('scroll', ()=>{
+  document.getElementById('main-nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// ─── SCROLL REVEAL ──────────────────────────
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:0.12});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// ─── FORM ──────────────────────────────────
+function submitForm(){
+  showToast('🌿 Message sent! We\'ll be in touch soon.');
+}
+</script>
+</body>
+</html>
